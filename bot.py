@@ -2,10 +2,12 @@ import os
 import re
 import asyncio
 
+
 import discord
 from dotenv import load_dotenv
 from groq import AsyncGroq
 from pymongo import MongoClient
+from pathlib import Path
 
 
 # Load environment variables
@@ -63,6 +65,10 @@ Instructions:
   answer briefly and do not bring in unrelated previous questions.
 - Use Markdown when useful.
 """
+
+AGENCY_CONTEXT = Path(__file__).with_name(
+    "agency_context.md"
+).read_text(encoding="utf-8")
 
 
 # Create MongoDB indexes
@@ -539,7 +545,10 @@ async def on_message(message):
             try:
                 completion = await groq_client.chat.completions.create(
                     model=MODEL,
-                    messages=groq_messages,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "system", "content": AGENCY_CONTEXT}
+                    ] + groq_messages,
                     max_completion_tokens=1024
                 )
 
